@@ -32,6 +32,7 @@ const Content: React.FC = () => {
   const { data: sessionData } = useSession();
 
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+
   //get all topics
   const { data: topics, refetch: refetchTopics } = api.topic.getAll.useQuery(
     undefined,
@@ -45,12 +46,26 @@ const Content: React.FC = () => {
       void refetchTopics();
     },
   });
+
+  const createNote = api.note.create.useMutation({
+    onSuccess: () => {
+      void refetchNotes();
+    },
+  });
+  const { data: notes, refetch: refetchNotes } = api.note.getAll.useQuery(
+    {
+      topicId: selectedTopic?.id ?? "",
+    },
+    {
+      enabled: sessionData?.user !== undefined && selectedTopic !== null,
+    }
+  );
   return (
     <div className="mx-5 mt-5 grid grid-cols-4 gap-2">
       <div className="px-2">
         <ul className="w-56 rounded bg-slate-100 p-2">
           {topics?.map((topic) => (
-            <li className="p-2 hover:bg-blue-700 rounded" key={topic.id}>
+            <li className="rounded p-2 hover:bg-blue-700" key={topic.id}>
               <a
                 href="#"
                 onClick={(evt) => {
@@ -67,7 +82,7 @@ const Content: React.FC = () => {
         <input
           type={"text"}
           placeholder="New Topic"
-          className="w-56 border border-slate-400 rounded-md"
+          className="w-56 rounded-md border border-slate-400"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               createTopic.mutate({
@@ -78,7 +93,17 @@ const Content: React.FC = () => {
           }}
         />
       </div>
-      <div className="col-span-3"><NoteEditor /></div>
+      <div className="col-span-3">
+        <NoteEditor
+          onSave={(note) => {
+            createNote.mutate({
+              title: note.title,
+              content: note.content,
+              topicId: selectedTopic?.id ?? "",
+            });
+          }}
+        />
+      </div>
     </div>
   );
 };
