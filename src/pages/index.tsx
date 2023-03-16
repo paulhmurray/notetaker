@@ -2,9 +2,11 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import { signIn, signOut, useSession } from "next-auth/react";
 
-import { api } from "~/utils/api";
+import { api, type RouterOutputs } from "~/utils/api";
 import Header from "~/components/Header";
-import React from "react";
+import React, { useState } from "react";
+import { type } from "os";
+import { NoteEditor } from "~/components/NoteEditor";
 
 const Home: NextPage = () => {
   return (
@@ -24,8 +26,12 @@ const Home: NextPage = () => {
 
 export default Home;
 
+type Topic = RouterOutputs["topic"]["getAll"][0];
+
 const Content: React.FC = () => {
   const { data: sessionData } = useSession();
+
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   //get all topics
   const { data: topics, refetch: refetchTopics } = api.topic.getAll.useQuery(
     undefined,
@@ -44,11 +50,12 @@ const Content: React.FC = () => {
       <div className="px-2">
         <ul className="w-56 rounded bg-slate-100 p-2">
           {topics?.map((topic) => (
-            <li className="p-2" key={topic.id}>
+            <li className="p-2 hover:bg-blue-700 rounded" key={topic.id}>
               <a
                 href="#"
                 onClick={(evt) => {
                   evt.preventDefault();
+                  setSelectedTopic(topic);
                 }}
               >
                 {topic.title}
@@ -60,7 +67,7 @@ const Content: React.FC = () => {
         <input
           type={"text"}
           placeholder="New Topic"
-          className="w-56 border border-slate-400"
+          className="w-56 border border-slate-400 rounded-md"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               createTopic.mutate({
@@ -71,7 +78,7 @@ const Content: React.FC = () => {
           }}
         />
       </div>
-      <div className="col-span-3">Howdy</div>
+      <div className="col-span-3"><NoteEditor /></div>
     </div>
   );
 };
