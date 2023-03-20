@@ -20,8 +20,12 @@ export const noteRouter = createTRPCRouter({
       return ctx.prisma.note.create({
         data: {
           title: input.title,
-          topicId: input.topicId,
           content: input.content,
+          topic: {
+            connect: {
+              id: input.topicId,
+            },
+          },
         },
       });
     }),
